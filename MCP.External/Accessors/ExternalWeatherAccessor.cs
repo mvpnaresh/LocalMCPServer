@@ -1,4 +1,5 @@
 ﻿using ModelContextProtocol.Server;
+using Refit;
 using System.ComponentModel;
 
 namespace MCP.External.Accessors
@@ -6,33 +7,39 @@ namespace MCP.External.Accessors
     [McpServerToolType]
     public class ExternalWeatherAccessor
     {
-        private readonly HttpClient _httpClient;
+        private readonly IWeatherService _weatherService;
+        private readonly string apiKey = "cca5a86e94fe47bbbc3120440251809";
 
-        private ExternalWeatherAccessor()
+        public ExternalWeatherAccessor(IWeatherService weatherService)
         {
-            _httpClient = new HttpClient();
+            _weatherService = weatherService;
         }
 
         [McpServerTool, Description("Get current weather information for a specified city.")]
         public async Task<string> GetWeatherAsync(string cityName)
         {
-            var apiUrl = $"http://api.weatherapi.com/v1/current.json?key={"cca5a86e94fe47bbbc3120440251809"}&q={cityName}&aqi=no";
+           var apiResponse = await _weatherService.GetWeatherAsync(
+                apiKey: apiKey,
+                city: cityName,
+                aqi: "no"
+            );
 
-            try
+            if (!apiResponse.IsSuccessStatusCode)
             {
-                HttpResponseMessage responseMessage = await _httpClient.GetAsync(apiUrl);
-
-                responseMessage.EnsureSuccessStatusCode();
-
-                var responseContent = await responseMessage.Content.ReadAsStringAsync();
-
-                return responseContent;
-            }
-            catch (HttpRequestException ex)
-            {
-                Console.WriteLine($"Request error: {ex.Message}");
+                // log error, status code, correlation id
                 return null;
             }
+
+            return apiResponse.Content;
         }
+    }
+
+    public interface IWeatherService
+    {
+        [Get("/v1/current.json")]
+        Task<ApiResponse<string>> GetWeatherAsync(
+            [AliasAs("key")] string apiKey
+            , [AliasAs("q")] string city
+            , [AliasAs("aqi")] string aqi);
     }
 }
