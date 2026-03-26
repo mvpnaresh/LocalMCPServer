@@ -3,7 +3,6 @@ using System.Text.Json.Serialization;
 
 namespace MCP.External.Entities
 {
-    // â”€â”€ Root â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public class VehicleAnalyticsResponse
     {
         [JsonPropertyName("summary")]
@@ -49,7 +48,6 @@ namespace MCP.External.Entities
         public List<CheckinMonthStat> ByCheckinMonth { get; set; }
     }
 
-    // â”€â”€ Summary â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public class VehicleSummary
     {
         [JsonPropertyName("total_vehicles")]
@@ -86,7 +84,6 @@ namespace MCP.External.Entities
         public int NeverCheckedIn { get; set; }
     }
 
-    // â”€â”€ by_status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public class StatusStat
     {
         [JsonPropertyName("status")]
@@ -96,7 +93,6 @@ namespace MCP.External.Entities
         public int Count { get; set; }
     }
 
-    // â”€â”€ by_vehicle_type â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public class VehicleTypeStat
     {
         [JsonPropertyName("vehicle_type")]
@@ -112,7 +108,6 @@ namespace MCP.External.Entities
         public int OutOfService { get; set; }
     }
 
-    // â”€â”€ by_make â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public class MakeStat
     {
         [JsonPropertyName("make")]
@@ -125,7 +120,6 @@ namespace MCP.External.Entities
         public int InService { get; set; }
     }
 
-    // â”€â”€ by_model_year â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public class ModelYearStat
     {
         [JsonPropertyName("year")]
@@ -138,7 +132,6 @@ namespace MCP.External.Entities
         public int InService { get; set; }
     }
 
-    // â”€â”€ by_group â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public class VehicleGroupStat
     {
         [JsonPropertyName("group")]
@@ -160,7 +153,6 @@ namespace MCP.External.Entities
         public int DvirEnabled { get; set; }
     }
 
-    // â”€â”€ by_state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public class StateStat
     {
         [JsonPropertyName("state")]
@@ -170,7 +162,6 @@ namespace MCP.External.Entities
         public int Count { get; set; }
     }
 
-    // â”€â”€ eld_dvir â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public class EldDvirBreakdown
     {
         [JsonPropertyName("eld")]
@@ -189,7 +180,6 @@ namespace MCP.External.Entities
         public int Disabled { get; set; }
     }
 
-    // â”€â”€ type_by_status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public class VehicleTypeByStatus
     {
         [JsonPropertyName("vehicle_type")]
@@ -214,7 +204,6 @@ namespace MCP.External.Entities
         public int Unknown { get; set; }
     }
 
-    // â”€â”€ by_checkin_month â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public class CheckinMonthStat
     {
         /// <summary>ISO label e.g. "2025-12"</summary>
@@ -225,8 +214,6 @@ namespace MCP.External.Entities
         public int Count { get; set; }
     }
 
-    // â”€â”€ Generic label + count (used by by_year_bucket, by_hibernation,
-    //    by_seat_belt, by_inspection_list) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public class LabelCountStat
     {
         // One of these will be populated depending on the list:

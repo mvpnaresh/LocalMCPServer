@@ -3,7 +3,6 @@ using System.Text.Json.Serialization;
 
 namespace MCP.External.Entities
 {
-    // â”€â”€ Root â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public class DeviceAnalyticsResponse
     {
         [JsonPropertyName("summary")]
@@ -47,7 +46,6 @@ namespace MCP.External.Entities
         public List<AuxCamStat> ByAuxCamCount { get; set; }
     }
 
-    // â”€â”€ Summary â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public class DeviceSummary
     {
         [JsonPropertyName("total_devices")]
@@ -87,7 +85,6 @@ namespace MCP.External.Entities
         public int NeverMoved { get; set; }
     }
 
-    // â”€â”€ Reusable generic stat â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // Used by: by_status, by_health, by_operating_state, comm_staleness
     public class CountStat
     {
@@ -109,7 +106,6 @@ namespace MCP.External.Entities
         public int Count { get; set; }
     }
 
-    // â”€â”€ by_device_type â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public class DeviceTypeStat
     {
         [JsonPropertyName("device_type")]
@@ -131,7 +127,6 @@ namespace MCP.External.Entities
         public int WithIssues { get; set; }
     }
 
-    // â”€â”€ by_group â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public class GroupStat
     {
         [JsonPropertyName("group")]
@@ -150,7 +145,6 @@ namespace MCP.External.Entities
         public int WithIssues { get; set; }
     }
 
-    // â”€â”€ by_initial_year â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public class InitialYearStat
     {
         [JsonPropertyName("year")]
@@ -163,7 +157,6 @@ namespace MCP.External.Entities
         public int InService { get; set; }
     }
 
-    // â”€â”€ by_initial_month â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public class InitialMonthStat
     {
         /// <summary>ISO-style label e.g. "2025-03"</summary>
@@ -177,7 +170,6 @@ namespace MCP.External.Entities
         public int InService { get; set; }
     }
 
-    // â”€â”€ health_issues_detail â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public class HealthIssueStat
     {
         [JsonPropertyName("issue")]
@@ -187,7 +179,6 @@ namespace MCP.External.Entities
         public int Count { get; set; }
     }
 
-    // â”€â”€ status_by_device_type â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public class StatusByDeviceType
     {
         [JsonPropertyName("device_type")]
@@ -209,7 +200,6 @@ namespace MCP.External.Entities
         public int OpenRma { get; set; }
     }
 
-    // â”€â”€ by_aux_cam_count â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public class AuxCamStat
     {
         [JsonPropertyName("cam_count")]
