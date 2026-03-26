@@ -1,4 +1,4 @@
-using MCP.External.Data;
+﻿using MCP.External.Data;
 using MCP.External.Entities;
 using ModelContextProtocol.Server;
 using System.ComponentModel;
@@ -11,20 +11,20 @@ namespace MCP.External.Accessors
     {
         #region Private Methods
 
-        private async Task<List<LytxEvent>> GetEvents()
+        private async Task<List<Event>> GetEvents()
         {
             using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(EventsStaticResource.EventsJson));
             var jsonDoc = await JsonDocument.ParseAsync(stream);
-            var eventsElement = jsonDoc.RootElement.GetProperty("events");
+            var eventsElement = jsonDoc.RootElement.GetProperty("events").GetProperty("value");
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            var events = JsonSerializer.Deserialize<List<LytxEvent>>(eventsElement.GetRawText(), options);
-            return events ?? new List<LytxEvent>();
+            var events = JsonSerializer.Deserialize<List<Event>>(eventsElement.GetRawText(), options);
+            return events ?? new List<Event>();
         }
 
-        private async Task<string> GetEventsAsString(List<LytxEvent>? events)
+        private async Task<string> GetEventsAsString(List<Event>? events)
         {
             var options = new JsonSerializerOptions { WriteIndented = true };
-            var eventsToSerialize = events ?? new List<LytxEvent>();
+            var eventsToSerialize = events ?? new List<Event>();
             using var stream = new MemoryStream();
             await JsonSerializer.SerializeAsync(stream, eventsToSerialize, options);
             stream.Position = 0;
