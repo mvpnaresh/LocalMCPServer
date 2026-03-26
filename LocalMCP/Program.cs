@@ -1,6 +1,4 @@
 ﻿using MCP.External.Accessors;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Polly;
 using Polly.Extensions.Http;
 using Refit;
@@ -11,12 +9,10 @@ namespace LocalMCP
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine("Hello, MCP Server!");
-
-            var builder = Host.CreateEmptyApplicationBuilder(settings : null);
+            var builder = WebApplication.CreateBuilder(args);
 
             builder.Services.AddMcpServer()
-                .WithStdioServerTransport()
+                .WithHttpTransport()
                 .WithToolsFromAssembly(typeof(ExternalBooksAccessor).Assembly);
 
             builder.Services.AddRefitClient<IWeatherService>()
@@ -29,6 +25,8 @@ namespace LocalMCP
                 .AddPolicyHandler(GetCircuitBreakerPolicy());
 
             var app = builder.Build();
+
+            app.MapMcp();
 
             await app.RunAsync();
 
