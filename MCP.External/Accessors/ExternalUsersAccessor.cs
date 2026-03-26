@@ -1,4 +1,4 @@
-using MCP.External.Data;
+﻿using MCP.External.Data;
 using MCP.External.Entities;
 using ModelContextProtocol.Server;
 using System.ComponentModel;
@@ -11,20 +11,20 @@ namespace MCP.External.Accessors
     {
         #region Private Methods
 
-        private async Task<List<LytxUser>> GetUsers()
+        private async Task<List<User>> GetUsers()
         {
             using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(UsersStaticResource.UsersJson));
             var jsonDoc = await JsonDocument.ParseAsync(stream);
-            var usersElement = jsonDoc.RootElement.GetProperty("users");
+            var usersElement = jsonDoc.RootElement.GetProperty("users").GetProperty("value");
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            var users = JsonSerializer.Deserialize<List<LytxUser>>(usersElement.GetRawText(), options);
-            return users ?? new List<LytxUser>();
+            var users = JsonSerializer.Deserialize<List<User>>(usersElement.GetRawText(), options);
+            return users ?? new List<User>();
         }
 
-        private async Task<string> GetUsersAsString(List<LytxUser>? users)
+        private async Task<string> GetUsersAsString(List<User>? users)
         {
             var options = new JsonSerializerOptions { WriteIndented = true };
-            var usersToSerialize = users ?? new List<LytxUser>();
+            var usersToSerialize = users ?? new List<User>();
             using var stream = new MemoryStream();
             await JsonSerializer.SerializeAsync(stream, usersToSerialize, options);
             stream.Position = 0;

@@ -1,4 +1,4 @@
-﻿namespace MCP.External.Data
+namespace MCP.External.Data
 {
     internal static class UsersStaticResource
     {

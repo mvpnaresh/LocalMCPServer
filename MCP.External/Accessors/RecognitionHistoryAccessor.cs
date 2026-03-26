@@ -109,6 +109,108 @@ namespace MCP.External.Accessors
             return await GetRecognitionHistoryAsString(filteredRecognitionHistory);
         }
 
+        [McpServerTool, Description("Get Recognition History by driver name only")]
+        public async Task<string> GetRecognitionHistoryByDriver(string driver)
+        {
+            var recognitionHistory = await GetRecognitionHistory();
+            var filtered = recognitionHistory.Where(r =>
+                r.Driver != null && r.Driver.Contains(driver, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+
+            return await GetRecognitionHistoryAsString(filtered);
+        }
+
+        [McpServerTool, Description("Get Recognition History by the person who issued the recognition")]
+        public async Task<string> GetRecognitionHistoryByIssuedBy(string issuedBy)
+        {
+            var recognitionHistory = await GetRecognitionHistory();
+            var filtered = recognitionHistory.Where(r =>
+                r.IssuedBy != null && r.IssuedBy.Contains(issuedBy, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+
+            return await GetRecognitionHistoryAsString(filtered);
+        }
+
+        [McpServerTool, Description("Get Recognition History issued within a date range. Dates must be in format 'MMM dd, yyyy' e.g. 'Jan 01, 2025'")]
+        public async Task<string> GetRecognitionHistoryByDateRange(string fromDate, string toDate)
+        {
+            var recognitionHistory = await GetRecognitionHistory();
+            var formats = new[] { "MMM dd, yyyy", "MMM d, yyyy" };
+            var culture = System.Globalization.CultureInfo.InvariantCulture;
+
+            if (!DateTime.TryParseExact(fromDate, formats, culture, System.Globalization.DateTimeStyles.None, out var from) ||
+                !DateTime.TryParseExact(toDate, formats, culture, System.Globalization.DateTimeStyles.None, out var to))
+            {
+                return "Invalid date format. Use 'MMM dd, yyyy' e.g. 'Jan 01, 2025'.";
+            }
+
+            var filtered = recognitionHistory.Where(r =>
+                r.IssuedDate != null &&
+                DateTime.TryParseExact(r.IssuedDate, formats, culture, System.Globalization.DateTimeStyles.None, out var d) &&
+                d >= from && d <= to
+            ).ToList();
+
+            return await GetRecognitionHistoryAsString(filtered);
+        }
+
+        [McpServerTool, Description("Get Recognition History by month and year e.g. month=3 year=2026 for March 2026")]
+        public async Task<string> GetRecognitionHistoryByMonth(int month, int year)
+        {
+            var recognitionHistory = await GetRecognitionHistory();
+            var formats = new[] { "MMM dd, yyyy", "MMM d, yyyy" };
+            var culture = System.Globalization.CultureInfo.InvariantCulture;
+
+            var filtered = recognitionHistory.Where(r =>
+                r.IssuedDate != null &&
+                DateTime.TryParseExact(r.IssuedDate, formats, culture, System.Globalization.DateTimeStyles.None, out var d) &&
+                d.Month == month && d.Year == year
+            ).ToList();
+
+            return await GetRecognitionHistoryAsString(filtered);
+        }
+
+        [McpServerTool, Description("Get Recognition History records that are missing a group assignment")]
+        public async Task<string> GetRecognitionHistoryWithMissingGroup()
+        {
+            var recognitionHistory = await GetRecognitionHistory();
+            var filtered = recognitionHistory.Where(r =>
+                string.IsNullOrWhiteSpace(r.Group)
+            ).ToList();
+
+            return await GetRecognitionHistoryAsString(filtered);
+        }
+
+        [McpServerTool, Description("Get a summary of Recognition History including counts by type, top groups, and top issuers")]
+        public async Task<string> GetRecognitionHistorySummary()
+        {
+            var recognitionHistory = await GetRecognitionHistory();
+
+            var summary = new
+            {
+                TotalRecognitions = recognitionHistory.Count,
+                ByType = recognitionHistory
+                    .GroupBy(r => r.Type ?? "Unknown")
+                    .Select(g => new { Type = g.Key, Count = g.Count() })
+                    .OrderByDescending(x => x.Count),
+                TopGroups = recognitionHistory
+                    .Where(r => !string.IsNullOrWhiteSpace(r.Group))
+                    .GroupBy(r => r.Group!)
+                    .Select(g => new { Group = g.Key, Count = g.Count() })
+                    .OrderByDescending(x => x.Count)
+                    .Take(10),
+                TopIssuers = recognitionHistory
+                    .Where(r => !string.IsNullOrWhiteSpace(r.IssuedBy))
+                    .GroupBy(r => r.IssuedBy!)
+                    .Select(g => new { IssuedBy = g.Key, Count = g.Count() })
+                    .OrderByDescending(x => x.Count)
+                    .Take(10),
+                MissingGroupCount = recognitionHistory.Count(r => string.IsNullOrWhiteSpace(r.Group))
+            };
+
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            return JsonSerializer.Serialize(summary, options);
+        }
+
         #endregion
     }
 }
