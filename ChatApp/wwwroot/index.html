@@ -3,22 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MCP Chat</title>
+  <title>Cipher BOT</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     :root {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --surface2: #242736;
-      --border: #2e3347;
-      --accent: #6c63ff;
-      --accent-hover: #5a52e0;
-      --text: #e8eaf0;
-      --text-muted: #8b90a7;
-      --user-bubble: #6c63ff;
-      --ai-bubble: #242736;
-      --tool-bg: #1a2535;
-      --tool-border: #2a4a6b;
-      --tool-text: #64b5f6;
+      --bg: #f4f2fa;
+      --surface: #ffffff;
+      --surface2: #ede8f7;
+      --border: #d0c7ec;
+      --accent: #5b3fa6;
+      --accent-hover: #4a3285;
+      --header-bg: #2d1b6b;
+      --text: #1a1245;
+      --text-muted: #6b5fa0;
+      --user-bubble: #ede8f7;
+      --user-bubble-text: #3b2480;
+      --ai-bubble: #f0ecfb;
+      --tool-bg: #f0ecfb;
+      --tool-border: #c4b0e8;
+      --tool-text: #4a3285;
       --error: #ef5350;
       --radius: 12px;
       --font: 'Segoe UI', system-ui, sans-serif;
@@ -28,6 +31,7 @@
 
     body {
       font-family: var(--font);
+      font-size: 15px;
       background: var(--bg);
       color: var(--text);
       height: 100vh;
@@ -41,20 +45,20 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 14px 20px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
+      padding: 14px 22px;
+      background: var(--header-bg);
+      border-bottom: none;
       flex-shrink: 0;
     }
-    header .logo { font-size: 22px; }
-    header h1 { font-size: 18px; font-weight: 600; }
+    header .logo { font-size: 24px; }
+    header h1 { font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: 0.3px; }
     header .subtitle {
       margin-left: auto;
-      font-size: 12px;
-      color: var(--text-muted);
+      font-size: 13px;
+      color: rgba(255,255,255,0.65);
     }
     header .status-dot {
-      width: 8px; height: 8px;
+      width: 9px; height: 9px;
       border-radius: 50%;
       background: #4caf50;
       flex-shrink: 0;
@@ -69,51 +73,198 @@
 
     /* ── Sidebar ── */
     aside {
-      width: 240px;
+      width: 280px;
+      min-width: 160px;
+      max-width: 520px;
       flex-shrink: 0;
       background: var(--surface);
       border-right: 1px solid var(--border);
       display: flex;
       flex-direction: column;
+      transition: width 0.25s ease;
       overflow: hidden;
+      position: relative;
     }
-    aside h2 {
-      padding: 16px;
+    aside.resizing { transition: none; }
+    .resize-handle {
+      position: absolute;
+      top: 0; right: 0;
+      width: 5px;
+      height: 100%;
+      cursor: col-resize;
+      z-index: 10;
+      background: transparent;
+      transition: background 0.15s;
+    }
+    .resize-handle:hover,
+    .resize-handle.dragging { background: var(--accent); opacity: 0.35; }
+    aside.collapsed {
+      width: 36px;
+      min-width: 36px;
+    }
+    aside.collapsed #tool-list { display: none; }
+    aside.collapsed .sidebar-header {
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 14px 0 0;
+      gap: 0;
+      border-bottom: none;
+      height: 100%;
+    }
+    aside.collapsed .sidebar-title { display: none; }
+    aside.collapsed .sidebar-toggle {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: var(--surface2);
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+    aside.collapsed .collapsed-label { display: flex; }
+    .collapsed-label {
+      display: none;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      transform: rotate(180deg);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      margin-top: 14px;
+      cursor: default;
+    }
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .sidebar-title {
       font-size: 11px;
-      font-weight: 600;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1px;
       color: var(--text-muted);
-      border-bottom: 1px solid var(--border);
     }
+    .sidebar-toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 16px;
+      padding: 2px 4px;
+      border-radius: 4px;
+      line-height: 1;
+      transition: background 0.15s;
+    }
+    .sidebar-toggle:hover { background: var(--surface2); }
     #tool-list {
       flex: 1;
       overflow-y: auto;
       padding: 8px;
     }
-    .tool-item {
-      padding: 10px 12px;
-      border-radius: 8px;
-      margin-bottom: 4px;
+
+    /* ── Tool groups ── */
+    .tool-group {
+      margin-bottom: 6px;
       border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .tool-group-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
       background: var(--surface2);
-      cursor: default;
-      transition: border-color 0.15s;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s;
     }
-    .tool-item.active {
-      border-color: var(--accent);
-      background: rgba(108, 99, 255, 0.1);
+    .tool-group-header:hover { background: #d8d0f0; }
+    .tool-group-icon { font-size: 14px; flex-shrink: 0; }
+    .tool-group-name {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--tool-text);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
+    .tool-group-count {
+      font-size: 10px;
+      color: var(--text-muted);
+      background: var(--border);
+      border-radius: 10px;
+      padding: 1px 6px;
+      font-weight: 600;
+    }
+    .tool-group-chevron {
+      font-size: 10px;
+      color: var(--text-muted);
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+    .tool-group.open .tool-group-chevron { transform: rotate(180deg); }
+
+    .tool-group-items {
+      display: none;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .tool-group.open .tool-group-items { display: block; }
+
+    .tool-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .tool-item:last-child { border-bottom: none; }
+    .tool-item:hover { background: var(--surface2); border-left: 3px solid var(--accent); }
+    .tool-item:hover .tool-item-arrow { opacity: 1; }
+    .tool-item.active { background: #e4ddf5; }
+    .tool-item-arrow {
+      font-size: 16px;
+      color: var(--accent);
+      opacity: 0;
+      transition: opacity 0.15s;
+      align-self: center;
+      flex-shrink: 0;
+      font-weight: bold;
+    }
+    .tool-item-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+    .tool-item-info { flex: 1; min-width: 0; }
     .tool-name {
       font-size: 13px;
       font-weight: 600;
-      color: var(--tool-text);
-      margin-bottom: 3px;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .tool-desc {
-      font-size: 11px;
+      font-size: 12px;
       color: var(--text-muted);
       line-height: 1.4;
+      margin-top: 2px;
     }
     .tool-loading {
       padding: 16px;
@@ -187,45 +338,111 @@
     .msg.ai   { align-self: flex-start; }
 
     .avatar {
-      width: 32px; height: 32px;
+      width: 34px; height: 34px;
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 16px;
       flex-shrink: 0;
       margin-top: 2px;
+      font-size: 18px;
     }
-    .msg.user .avatar { background: var(--user-bubble); }
-    .msg.ai   .avatar { background: var(--surface2); border: 1px solid var(--border); }
+    .msg.user .avatar {
+      background: #ddd5f3;
+      color: #3b2480;
+      border: 2px solid #c4b0e8;
+    }
+    .msg.ai .avatar {
+      background: var(--header-bg);
+      color: #ffffff;
+      border: 2px solid #4a3285;
+    }
 
     .bubble {
-      padding: 12px 16px;
+      padding: 14px 18px;
       border-radius: var(--radius);
-      font-size: 14px;
-      line-height: 1.6;
-      max-width: 600px;
+      font-size: 15px;
+      line-height: 1.65;
+      max-width: 760px;
+      overflow-wrap: break-word;
+      word-break: break-word;
+      min-width: 0;
     }
     .msg.user .bubble {
       background: var(--user-bubble);
-      color: #fff;
+      color: var(--user-bubble-text);
+      border: 1px solid #c4b0e8;
       border-bottom-right-radius: 4px;
+      font-weight: 500;
     }
     .msg.ai .bubble {
       background: var(--ai-bubble);
       border: 1px solid var(--border);
       border-bottom-left-radius: 4px;
     }
+    /* ── Markdown rendered content ── */
+    .md h1,.md h2,.md h3 { font-weight: 700; margin: 12px 0 5px; color: var(--text); }
+    .md h1 { font-size: 19px; } .md h2 { font-size: 17px; } .md h3 { font-size: 15px; }
+    .md p { margin: 5px 0; font-size: 15px; }
+    .md hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+    .md ul,.md ol { padding-left: 22px; margin: 5px 0; }
+    .md li { margin: 3px 0; font-size: 15px; }
+    .md code { background: var(--surface2); padding: 2px 6px; border-radius: 4px; font-size: 13px; font-family: Consolas,monospace; }
+    .md table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 10px 0; table-layout: auto; }
+    .md th { background: var(--surface2); color: var(--tool-text); font-weight: 700; padding: 8px 12px; border: 1px solid var(--border); text-align: left; white-space: nowrap; }
+    .md td { padding: 7px 12px; border: 1px solid var(--border); font-size: 14px; }
+    .md td:first-child { white-space: nowrap; font-weight: 600; text-align: center; width: 1%; }
+    .md tr:nth-child(even) td { background: var(--bg); }
+    .chart-wrap {
+      position: relative;
+      width: 100%;
+      height: 300px;
+      margin: 14px 0 4px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px 10px;
+    }
+    .chart-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
 
     /* Tool call cards inside AI messages */
     .tool-calls {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 4px;
       margin-bottom: 10px;
     }
+    /* Collapsed summary bar shown when all cards are collapsed */
+    .tool-calls-summary {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      background: rgba(91, 63, 166, 0.07);
+      border: 1px solid var(--tool-border);
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--tool-text);
+      cursor: pointer;
+      user-select: none;
+      margin-bottom: 4px;
+    }
+    .tool-calls-summary:hover { background: rgba(91, 63, 166, 0.13); }
+    .tool-calls-summary .summary-chevron { font-size: 11px; transition: transform 0.2s; }
+    .tool-calls-summary.open .summary-chevron { transform: rotate(90deg); }
+    .tool-calls-summary .summary-label { font-weight: 600; }
+    .tool-calls-summary .summary-names { color: var(--text-muted); font-size: 11px; }
+    .tool-calls-cards { display: flex; flex-direction: column; gap: 4px; }
+    .tool-calls-cards.hidden { display: none; }
     .tool-call-card {
       background: var(--tool-bg);
       border: 1px solid var(--tool-border);
-      border-radius: 8px;
+      border-radius: 7px;
       overflow: hidden;
       font-size: 12px;
     }
@@ -233,13 +450,23 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      padding: 7px 10px;
-      background: rgba(42, 74, 107, 0.4);
-      border-bottom: 1px solid var(--tool-border);
+      padding: 6px 10px;
+      background: rgba(91, 63, 166, 0.07);
+      cursor: pointer;
+      user-select: none;
     }
-    .tool-call-icon { font-size: 13px; }
-    .tool-call-name { font-weight: 600; color: var(--tool-text); }
-    .tool-call-body { padding: 8px 10px; color: var(--text-muted); }
+    .tool-call-header:hover { background: rgba(91, 63, 166, 0.13); }
+    .tool-call-icon { font-size: 12px; }
+    .tool-call-name { font-weight: 600; color: var(--tool-text); flex: 1; }
+    .tool-call-chevron { font-size: 10px; color: var(--text-muted); transition: transform 0.2s; }
+    .tool-call-card.open .tool-call-chevron { transform: rotate(90deg); }
+    .tool-call-card.open .tool-call-header { border-bottom: 1px solid var(--tool-border); }
+    .tool-call-body {
+      padding: 8px 10px;
+      color: var(--text-muted);
+      display: none;
+    }
+    .tool-call-card.open .tool-call-body { display: block; }
     .tool-call-body pre {
       white-space: pre-wrap;
       word-break: break-word;
@@ -296,9 +523,9 @@
       border: 1px solid var(--border);
       color: var(--text);
       border-radius: var(--radius);
-      padding: 12px 14px;
+      padding: 13px 16px;
       font-family: var(--font);
-      font-size: 14px;
+      font-size: 15px;
       line-height: 1.5;
       max-height: 150px;
       outline: none;
@@ -338,14 +565,19 @@
 
 <header>
   <span class="logo">🤖</span>
-  <h1>MCP Chat</h1>
+  <h1>Cipher BOT</h1>
   <span class="status-dot" id="status-dot"></span>
   <span class="subtitle" id="status-label">Connecting…</span>
 </header>
 
 <div class="layout">
-  <aside>
-    <h2>🔧 Available Tools</h2>
+  <aside id="sidebar">
+    <div class="resize-handle" id="resize-handle"></div>
+    <div class="sidebar-header">
+      <span class="sidebar-title">🔍 Data Explorer</span>
+      <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">◀</button>
+    </div>
+    <span class="collapsed-label">🔍 Data Explorer</span>
     <div id="tool-list">
       <div class="tool-loading">Loading tools…</div>
     </div>
@@ -356,12 +588,16 @@
       <div class="welcome" id="welcome">
         <div class="icon">💬</div>
         <h3>Ask me anything</h3>
-        <p>I'm connected to your MCP server. Try asking about the weather, books in the catalog, or coaching sessions.</p>
+        <p>I'm connected to your MCP server. Ask about driver events, coaching history, recognitions, vehicles, devices, and more.</p>
         <div class="suggestions">
           <div class="suggestion-chip" onclick="sendSuggestion(this)">🌤 What's the weather in London?</div>
-          <div class="suggestion-chip" onclick="sendSuggestion(this)">📚 Show me all available books</div>
-          <div class="suggestion-chip" onclick="sendSuggestion(this)">🏆 List all coaching sessions</div>
-          <div class="suggestion-chip" onclick="sendSuggestion(this)">📖 What books are in the Fiction category?</div>
+          <div class="suggestion-chip" onclick="sendSuggestion(this)">📋 Show me recent driver events</div>
+          <div class="suggestion-chip" onclick="sendSuggestion(this)">📜 List all coaching history</div>
+          <div class="suggestion-chip" onclick="sendSuggestion(this)">🏅 Show positive recognitions for drivers</div>
+          <div class="suggestion-chip" onclick="sendSuggestion(this)">🚗 Give me a vehicle analytics summary</div>
+          <div class="suggestion-chip" onclick="sendSuggestion(this)">📡 Show device analytics</div>
+          <div class="suggestion-chip" onclick="sendSuggestion(this)">👥 List all users</div>
+          <div class="suggestion-chip" onclick="sendSuggestion(this)">📊 Give me a group analytics summary</div>
         </div>
       </div>
     </div>
@@ -375,7 +611,10 @@
           autofocus></textarea>
         <button id="send-btn" title="Send">➤</button>
       </div>
-      <div class="input-hint">Powered by Claude Opus 4.6 + MCP</div>
+      <div class="input-hint">Powered by Claude Sonnet 4.6 + MCP</div>
+      <div id="auth-warning" style="display:none;margin-top:6px;padding:6px 12px;background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;font-size:12px;color:#92400e;text-align:center;">
+        ⚠️ AWS credentials expired — please refresh your session token and restart the app
+      </div>
     </div>
   </main>
 </div>
@@ -404,7 +643,68 @@
     }
   });
 
-  sendBtn.addEventListener('click', sendMessage);
+  sendBtn.addEventListener('click', () => sendMessage());
+
+  // ── Sidebar drag-to-resize ──
+  (function () {
+    const sidebar = document.getElementById('sidebar');
+    const handle  = document.getElementById('resize-handle');
+    let dragging = false, startX = 0, startW = 0;
+
+    handle.addEventListener('mousedown', e => {
+      dragging = true;
+      startX = e.clientX;
+      startW = sidebar.offsetWidth;
+      handle.classList.add('dragging');
+      sidebar.classList.add('resizing');
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    });
+
+    document.addEventListener('mousemove', e => {
+      if (!dragging) return;
+      const newW = Math.min(520, Math.max(160, startW + (e.clientX - startX)));
+      sidebar.style.width = newW + 'px';
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (!dragging) return;
+      dragging = false;
+      handle.classList.remove('dragging');
+      sidebar.classList.remove('resizing');
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    });
+  })();
+
+  // ── Tool grouping config ──
+  const GROUP_CONFIG = [
+    { key: 'events',          label: 'Events',              icon: '📋', match: n => n.includes('event') },
+    { key: 'users',           label: 'Users',               icon: '👥', match: n => n.includes('user') },
+    { key: 'coachinghistory', label: 'Coaching History',    icon: '📜', match: n => n.includes('coachinghistory') || n.includes('coaching_history') || n.includes('coachingsession') || n.includes('coaching_session') || n.includes('coaching') },
+    { key: 'recognition',     label: 'Recognition History', icon: '🏅', match: n => n.includes('recognition') },
+    { key: 'device',          label: 'Device Analytics',    icon: '📡', match: n => n.includes('device') },
+    { key: 'vehicle',         label: 'Vehicle Analytics',   icon: '🚗', match: n => n.includes('vehicle') },
+    { key: 'group',           label: 'Group Analytics',     icon: '📊', match: n => n.includes('groupanalytics') || n.includes('group_analytics') },
+    { key: 'weather',         label: 'Weather',             icon: '🌤', match: n => n.includes('weather') },
+  ];
+
+  function getGroup(toolName) {
+    const n = toolName.toLowerCase();
+    // coachinghistory must be checked before coachingsession
+    for (const g of GROUP_CONFIG) {
+      if (g.match(n)) return g;
+    }
+    return { key: 'other', label: 'Other', icon: '🔧' };
+  }
+
+  // ── Sidebar collapse/expand ──
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const btn = sidebar.querySelector('.sidebar-toggle');
+    sidebar.classList.toggle('collapsed');
+    btn.textContent = sidebar.classList.contains('collapsed') ? '▶' : '◀';
+  }
 
   // ── Load tools on startup ──
   async function loadTools() {
@@ -412,19 +712,68 @@
       const res  = await fetch('/api/tools');
       const data = await res.json();
       toolList.innerHTML = '';
+
+      // Group tools
+      const groups = new Map();
       data.forEach(t => {
-        const el = document.createElement('div');
-        el.className = 'tool-item';
-        el.dataset.name = t.name;
-        el.innerHTML = `
-          <div class="tool-name">⚡ ${t.name}</div>
-          <div class="tool-desc">${t.description || 'No description'}</div>`;
-        toolList.appendChild(el);
+        const g = getGroup(t.name);
+        if (!groups.has(g.key)) groups.set(g.key, { ...g, tools: [] });
+        groups.get(g.key).tools.push(t);
       });
-      statusDot.style.background = '#4caf50';
+
+      // Sort: known groups first, "other" always last
+      const sorted = [...groups.values()].sort((a, b) => {
+        if (a.key === 'other') return 1;
+        if (b.key === 'other') return -1;
+        return 0;
+      });
+
+      // Render each group
+      sorted.forEach(group => {
+        const groupEl = document.createElement('div');
+        groupEl.className = 'tool-group';
+        groupEl.dataset.group = group.key;
+
+        const header = document.createElement('div');
+        header.className = 'tool-group-header';
+        header.innerHTML = `
+          <span class="tool-group-icon">${group.icon}</span>
+          <span class="tool-group-name">${group.label}</span>
+          <span class="tool-group-count">${group.tools.length}</span>
+          <span class="tool-group-chevron">▼</span>`;
+        header.addEventListener('click', () => groupEl.classList.toggle('open'));
+
+        const items = document.createElement('div');
+        items.className = 'tool-group-items';
+        group.tools.forEach(t => {
+          const item = document.createElement('div');
+          item.className = 'tool-item';
+          item.dataset.name = t.name;
+          item.title = 'Click to ask about this';
+          item.innerHTML = `
+            <div class="tool-item-dot"></div>
+            <div class="tool-item-info">
+              <div class="tool-name">${formatToolName(t.name)}</div>
+              <div class="tool-desc">${t.description || ''}</div>
+            </div>
+            <span class="tool-item-arrow">›</span>`;
+          item.addEventListener('click', () => prefillTool(t.name, t.description));
+          items.appendChild(item);
+        });
+
+        groupEl.appendChild(header);
+        groupEl.appendChild(items);
+        toolList.appendChild(groupEl);
+      });
+
+      statusDot.style.background = '#22c55e';
       statusLabel.textContent = `${data.length} tools loaded`;
-    } catch {
-      toolList.innerHTML = '<div class="tool-loading" style="color:#ef5350">Failed to load tools</div>';
+    } catch (err) {
+      toolList.innerHTML = `
+        <div class="tool-loading" style="color:#ef5350">
+          Failed to connect to MCP server.<br>
+          <button onclick="loadTools()" style="margin-top:8px;padding:5px 12px;background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;">Retry</button>
+        </div>`;
       statusDot.style.background = '#ef5350';
       statusLabel.textContent = 'Connection failed';
     }
@@ -434,7 +783,10 @@
   // ── Highlight active tool in sidebar ──
   function highlightTool(name) {
     document.querySelectorAll('.tool-item').forEach(el => {
-      el.classList.toggle('active', el.dataset.name === name);
+      const isActive = el.dataset.name === name;
+      el.classList.toggle('active', isActive);
+      // Auto-open the parent group
+      if (isActive) el.closest('.tool-group')?.classList.add('open');
     });
   }
 
@@ -461,6 +813,27 @@
     if (toolCalls.length > 0) {
       const cardsWrap = document.createElement('div');
       cardsWrap.className = 'tool-calls';
+
+      // Summary bar (collapsed by default)
+      const summary = document.createElement('div');
+      summary.className = 'tool-calls-summary';
+      const toolNames = toolCalls.map(tc => formatToolName(tc.tool)).join(' · ');
+      summary.innerHTML = `
+        <span class="tool-call-icon">🔧</span>
+        <span class="summary-label">Used ${toolCalls.length} tool${toolCalls.length > 1 ? 's' : ''}</span>
+        <span class="summary-names">${escapeHtml(toolNames)}</span>
+        <span class="summary-chevron" style="margin-left:auto;">▶</span>`;
+
+      // Cards container (hidden by default)
+      const cardsContainer = document.createElement('div');
+      cardsContainer.className = 'tool-calls-cards hidden';
+
+      summary.addEventListener('click', () => {
+        const isOpen = !cardsContainer.classList.contains('hidden');
+        cardsContainer.classList.toggle('hidden', isOpen);
+        summary.classList.toggle('open', !isOpen);
+      });
+
       toolCalls.forEach(tc => {
         let inputStr = tc.input;
         try { inputStr = JSON.stringify(JSON.parse(tc.input), null, 2); } catch {}
@@ -469,7 +842,8 @@
         card.innerHTML = `
           <div class="tool-call-header">
             <span class="tool-call-icon">🔧</span>
-            <span class="tool-call-name">${tc.tool}</span>
+            <span class="tool-call-name">${formatToolName(tc.tool)}</span>
+            <span class="tool-call-chevron">▶</span>
           </div>
           <div class="tool-call-body">
             <div class="tool-section-label">Input</div>
@@ -479,8 +853,14 @@
               <div class="tool-result-text">${escapeHtml(tc.output.substring(0, 400))}${tc.output.length > 400 ? '…' : ''}</div>
             </div>
           </div>`;
-        cardsWrap.appendChild(card);
+        card.querySelector('.tool-call-header').addEventListener('click', () => {
+          card.classList.toggle('open');
+        });
+        cardsContainer.appendChild(card);
       });
+
+      cardsWrap.appendChild(summary);
+      cardsWrap.appendChild(cardsContainer);
       bubble.appendChild(cardsWrap);
     }
 
@@ -488,6 +868,7 @@
     const textEl = document.createElement('div');
     textEl.innerHTML = renderText(content);
     bubble.appendChild(textEl);
+    initCharts(textEl);
 
     wrap.appendChild(avatar);
     wrap.appendChild(bubble);
@@ -546,9 +927,13 @@
       hideThinking();
 
       if (!res.ok) {
-        const err = await res.text();
-        appendBubble('ai', `⚠️ Error: ${err}`);
-        history.pop(); // remove the failed user message from history
+        const body = await res.json().catch(() => null);
+        const msg = body?.detail || body?.title || 'Something went wrong. Please try again.';
+        if (msg.toLowerCase().includes('credential') || msg.toLowerCase().includes('token') || msg.toLowerCase().includes('expired')) {
+          document.getElementById('auth-warning').style.display = 'block';
+        }
+        appendBubble('ai', `⚠️ ${msg}`);
+        history.pop();
         return;
       }
 
@@ -573,12 +958,28 @@
     }
   }
 
+  // ── Auto-execute when a tool is clicked in sidebar ──
+  function prefillTool(toolName, description) {
+    const label = formatToolName(toolName);
+    const prompt = label.toLowerCase().startsWith('get all')
+      ? label.replace(/^get all/i, 'Show me all')
+      : label.replace(/^get /i, 'Show me ');
+    sendMessage(prompt);
+  }
+
   function sendSuggestion(el) {
     const text = el.textContent.replace(/^[\p{Emoji}\s]+/u, '').trim();
     sendMessage(text);
   }
 
   // ── Helpers ──
+  function formatToolName(name) {
+    return name
+      .replace(/_/g, ' ')
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/\b\w/g, c => c.toUpperCase());
+  }
+
   function escapeHtml(str) {
     return String(str)
       .replace(/&/g, '&amp;')
@@ -586,12 +987,163 @@
       .replace(/>/g, '&gt;');
   }
 
+  // ── Chart colours ──
+  const CHART_COLORS = ['#2563eb','#f59e0b','#10b981','#ef4444','#8b5cf6','#06b6d4','#f97316','#84cc16','#ec4899','#14b8a6','#6366f1','#fb923c'];
+
+  const pendingCharts = new Map();
+
+  function isNumericValue(v) {
+    const stripped = v.replace(/[,$% ]/g, '').trim();
+    if (stripped === '') return false;
+    if (/[\/\-:]/.test(stripped)) return false; // exclude dates/times like 11/6/25 or 2025-01-01
+    return !isNaN(Number(stripped));
+  }
+
+  function buildChartFromTable(parsedRows) {
+    if (parsedRows.length < 3) return ''; // header + at least 2 data rows
+    const dataRows = parsedRows.slice(1);
+    if (dataRows.length > 25) return ''; // too dense for a chart
+
+    const headers = parsedRows[0];
+
+    // Find numeric columns (majority of data rows are numeric)
+    const numericCols = [];
+    for (let col = 0; col < headers.length; col++) {
+      const vals = dataRows.map(r => (r[col] || '').replace(/[,$% ]/g, ''));
+      const numCount = vals.filter(v => v !== '' && !isNaN(parseFloat(v))).length;
+      if (numCount >= Math.ceil(dataRows.length * 0.6)) numericCols.push(col);
+    }
+    if (numericCols.length === 0) return '';
+
+    // Pick label column: first non-numeric, non-index column
+    let labelCol = -1;
+    for (let col = 0; col < headers.length; col++) {
+      if (!numericCols.includes(col)) { labelCol = col; break; }
+    }
+    if (labelCol === -1) labelCol = 0;
+
+    const labels = dataRows.map(r => (r[labelCol] || '').substring(0, 25));
+    const useCols = numericCols.filter(c => c !== labelCol).slice(0, 3);
+    if (useCols.length === 0) return '';
+
+    const usePie = useCols.length === 1 && dataRows.length <= 10;
+    const chartType = usePie ? 'pie' : 'bar';
+
+    const datasets = useCols.map((col, idx) => {
+      const values = dataRows.map(r => parseFloat((r[col] || '0').replace(/[,$% ]/g, '')) || 0);
+      if (usePie) {
+        return { label: headers[col], data: values, backgroundColor: CHART_COLORS.slice(0, values.length).map(c => c + 'cc'), borderColor: '#fff', borderWidth: 2 };
+      }
+      return { label: headers[col], data: values, backgroundColor: CHART_COLORS[idx] + 'cc', borderColor: CHART_COLORS[idx], borderWidth: 1, borderRadius: 4 };
+    });
+
+    const chartId = 'chart-' + Math.random().toString(36).slice(2, 9);
+    const config = {
+      type: chartType,
+      data: { labels, datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: usePie ? 'right' : 'top', labels: { font: { size: 11 }, boxWidth: 12 } },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.formattedValue}` } }
+        },
+        scales: usePie ? {} : {
+          x: { ticks: { font: { size: 11 }, maxRotation: 35 }, grid: { display: false } },
+          y: { ticks: { font: { size: 11 } }, beginAtZero: true }
+        }
+      }
+    };
+    pendingCharts.set(chartId, config);
+    const typeLabel = usePie ? 'Distribution' : 'Comparison';
+    return `<div class="chart-label">📊 ${typeLabel}</div><div class="chart-wrap"><canvas id="${chartId}" class="chart-canvas"></canvas></div>`;
+  }
+
+  function initCharts(container) {
+    container.querySelectorAll('canvas.chart-canvas').forEach(canvas => {
+      const config = pendingCharts.get(canvas.id);
+      if (config) { new Chart(canvas, config); pendingCharts.delete(canvas.id); }
+    });
+  }
+
   function renderText(str) {
-    // Minimal markdown: bold, code, newlines
+    const lines = str.split('\n');
+    let html = '';
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i];
+
+      // Table: collect all pipe-rows together
+      if (/^\s*\|/.test(line)) {
+        const tableLines = [];
+        while (i < lines.length && /^\s*\|/.test(lines[i])) {
+          tableLines.push(lines[i]);
+          i++;
+        }
+        // Filter out separator rows (---|---)
+        const rows = tableLines.filter(l => !/^\s*\|[\s\-|:]+\|\s*$/.test(l));
+        if (rows.length > 0) {
+          const parsedRows = rows.map(row =>
+            row.replace(/^\s*\||\|\s*$/g, '').split('|').map(c => c.trim())
+          );
+          html += '<table>';
+          parsedRows.forEach((cells, idx) => {
+            const tag = idx === 0 ? 'th' : 'td';
+            html += '<tr>' + cells.map(c => `<${tag}>${inlineMarkdown(c)}</${tag}>`).join('') + '</tr>';
+          });
+          html += '</table>';
+          html += buildChartFromTable(parsedRows);
+        }
+        continue;
+      }
+
+      // Heading
+      const h3 = line.match(/^###\s+(.*)/);
+      const h2 = line.match(/^##\s+(.*)/);
+      const h1 = line.match(/^#\s+(.*)/);
+      if (h3) { html += `<h3>${inlineMarkdown(h3[1])}</h3>`; i++; continue; }
+      if (h2) { html += `<h2>${inlineMarkdown(h2[1])}</h2>`; i++; continue; }
+      if (h1) { html += `<h1>${inlineMarkdown(h1[1])}</h1>`; i++; continue; }
+
+      // Horizontal rule
+      if (/^---+\s*$/.test(line)) { html += '<hr>'; i++; continue; }
+
+      // Bullet list item
+      if (/^[-*]\s+/.test(line)) {
+        html += '<ul>';
+        while (i < lines.length && /^[-*]\s+/.test(lines[i])) {
+          html += `<li>${inlineMarkdown(lines[i].replace(/^[-*]\s+/, ''))}</li>`;
+          i++;
+        }
+        html += '</ul>';
+        continue;
+      }
+
+      // Numbered list
+      if (/^\d+\.\s+/.test(line)) {
+        html += '<ol>';
+        while (i < lines.length && /^\d+\.\s+/.test(lines[i])) {
+          html += `<li>${inlineMarkdown(lines[i].replace(/^\d+\.\s+/, ''))}</li>`;
+          i++;
+        }
+        html += '</ol>';
+        continue;
+      }
+
+      // Empty line → spacer
+      if (line.trim() === '') { html += '<p style="margin:4px 0"></p>'; i++; continue; }
+
+      // Normal paragraph line
+      html += `<p>${inlineMarkdown(line)}</p>`;
+      i++;
+    }
+    return `<div class="md">${html}</div>`;
+  }
+
+  function inlineMarkdown(str) {
     return escapeHtml(str)
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/`(.+?)`/g, '<code style="background:#1a1d27;padding:1px 4px;border-radius:3px;font-size:12px;">$1</code>')
-      .replace(/\n/g, '<br>');
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>');
   }
 </script>
 

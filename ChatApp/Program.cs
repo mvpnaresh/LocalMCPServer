@@ -18,21 +18,29 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 
 const string McpServerUrl = "http://mcp-alb-241104355.us-east-1.elb.amazonaws.com/sse";
+HashSet<string> ExcludedTools = new(StringComparer.OrdinalIgnoreCase)
+{
+    "get_all_books", "get_books_by_category"
+};
 const string BedrockModelId = "us.anthropic.claude-sonnet-4-6";
 const string AwsRegion = "us-east-1";
 const string AwsProfile = "105927215370_LytxHackathonUser";
 
 const string SystemPrompt =
-    "You are a helpful assistant with access to three tools: " +
-    "weather (get current weather for any city), " +
-    "books (browse a catalog of books by category), and " +
-    "coaching sessions (look up driver coaching sessions by coach, driver, or date). " +
+    "You are a helpful fleet management assistant with access to tools covering: " +
+    "driver events, users, coaching history, recognition history, " +
+    "device analytics, vehicle analytics, group analytics, and weather. " +
     "Use these tools proactively whenever they can help answer the user's question. " +
     "Always be concise and friendly.";
 
 static AmazonBedrockRuntimeClient CreateBedrockClient()
 {
-    var chain = new CredentialProfileStoreChain();
+    // Explicitly point at the credentials file so the SDK finds it on Windows
+    var credFile = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+        ".aws", "credentials");
+
+    var chain = new CredentialProfileStoreChain(credFile);
     if (chain.TryGetAWSCredentials(AwsProfile, out var credentials))
         return new AmazonBedrockRuntimeClient(credentials, RegionEndpoint.GetBySystemName(AwsRegion));
 
@@ -87,7 +95,9 @@ app.MapPost("/api/chat", async (ChatRequest req, ILoggerFactory loggerFactory) =
             loggerFactory);
 
         // Fetch tools and build Bedrock tool schema
-        var mcpTools = await mcp.ListToolsAsync();
+        var mcpTools = (await mcp.ListToolsAsync())
+            .Where(t => !ExcludedTools.Contains(t.Name))
+            .ToList();
         var bedrockTools = mcpTools.Select(t =>
         {
             var toolDef = new JsonObject
@@ -219,7 +229,10 @@ app.MapPost("/api/chat", async (ChatRequest req, ILoggerFactory loggerFactory) =
     {
         var logger = loggerFactory.CreateLogger("ChatApp");
         logger.LogError(ex, "Error in /api/chat");
-        return Results.Problem(detail: ex.ToString(), title: ex.Message, statusCode: 500);
+        var userMessage = ex.Message.Contains("security token") || ex.Message.Contains("credentials") || ex.Message.Contains("InvalidClientTokenId")
+            ? "AWS credentials have expired. Please refresh your AWS session token and restart the app."
+            : ex.Message;
+        return Results.Problem(detail: userMessage, title: userMessage, statusCode: 500);
     }
 });
 
@@ -236,7 +249,9 @@ app.MapGet("/api/tools", async (ILoggerFactory loggerFactory) =>
         loggerFactory);
 
     var tools = await mcp.ListToolsAsync();
-    return Results.Ok(tools.Select(t => new { t.Name, t.Description }));
+    return Results.Ok(tools
+        .Where(t => !ExcludedTools.Contains(t.Name))
+        .Select(t => new { t.Name, t.Description }));
 });
 
 await app.RunAsync();
